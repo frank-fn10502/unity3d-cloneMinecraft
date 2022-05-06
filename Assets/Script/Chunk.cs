@@ -4,31 +4,14 @@ using System.Linq;
 using System;
 using UnityEngine;
 
-public class ChunkCoord
-{
-    public int x;
-    public int z;
-
-    public ChunkCoord(int x, int z)
-    {
-        this.x = x;
-        this.z = z;
-    }
-
-    public bool Equals(ChunkCoord coord)
-    {
-        return x == coord.x &&
-               z == coord.z;
-    }
-}
 
 public class Chunk
 {
-    public static readonly byte width = 16, height = 5;
+    public static readonly byte width = 5, height = 2;
     private readonly Terrain terrain;
 
     private readonly ChunkCoord coord;
-    public GameObject chunk;
+    GameObject gameObj;
     MeshFilter meshFilter;
     MeshRenderer meshRenderer;
 
@@ -39,34 +22,36 @@ public class Chunk
 
     byte[,,] map = new byte[width, height, width];
 
+    public bool IsActive
+    {
+        get { return this.gameObj.activeSelf; }
+        set { this.gameObj.SetActive(value); }
+    }
+
+    public Vector3 Position
+    {
+        get { return this.gameObj.transform.position; }
+    }
+
     public Chunk(Terrain terrain, ChunkCoord coord)
     {
         this.terrain = terrain;
         this.coord = coord;
 
-        this.chunk = new GameObject();
-        this.meshFilter = this.chunk.AddComponent<MeshFilter>();
-        this.meshRenderer = this.chunk.AddComponent<MeshRenderer>();
+        this.gameObj = new GameObject();
+        this.meshFilter = this.gameObj.AddComponent<MeshFilter>();
+        this.meshRenderer = this.gameObj.AddComponent<MeshRenderer>();
         this.meshRenderer.material = this.terrain.material;
 
-        this.chunk.transform.SetParent(this.terrain.gameObj.transform);
-        this.chunk.name = $"chunk {this.coord.x}, {this.coord.z}";
-        this.chunk.transform.position = new Vector3(
+        this.gameObj.transform.SetParent(this.terrain.Transform);
+        this.gameObj.name = $"chunk {this.coord.x}, {this.coord.z}";
+        this.gameObj.transform.position = new Vector3(
             this.coord.x * Chunk.width,
             0,
             this.coord.z * Chunk.width
         );
 
-        for (int x = 0; x < Chunk.width; x++)
-        {
-            for (int y = 0; y < height; y++)
-            {
-                for (int z = 0; z < Chunk.width; z++)
-                {
-                    this.map[x, y, z] = 2;
-                }
-            }
-        }
+        this.populateChunk();
 
 
         this.vertexBase = 0;
@@ -84,18 +69,34 @@ public class Chunk
         CreateMesh();
     }
 
+    void populateChunk()
+    {
+        for (int x = 0; x < Chunk.width; x++)
+        {
+            for (int y = 0; y < Chunk.height; y++)
+            {
+                for (int z = 0; z < Chunk.width; z++)
+                {
+                    this.map[x, y, z] = this.terrain.GetVoxelType(new Vector3(x, y, z) + this.Position);
+                }
+            }
+        }
+    }
+
     public bool HasBlock(Vector3 pos)
     {
         int x = Mathf.FloorToInt(pos.x);
         int y = Mathf.FloorToInt(pos.y);
         int z = Mathf.FloorToInt(pos.z);
 
-        if (y < 0 || y >= height) return false;
+        int blockId = -1;
+        if (!this.ValidArea(x, y, z))
+            blockId = this.terrain.GetVoxelType(pos + this.Position);
+        else
+            blockId = this.map[x, y, z];
 
-        if (x < 0 || y < 0 || z < 0) return false;
-        if (x >= width || y >= height || z >= width) return false;
 
-        return this.terrain.textureDatas[this.map[x, y, z]].IsSolid;
+        return this.terrain.GetVoxelInfo(blockId).IsSolid;
     }
 
     private void AddVoxelData(Vector3 pos)
@@ -104,6 +105,7 @@ public class Chunk
         foreach (int face in Enum.GetValues(typeof(Voxel.Face)))
         {
             if (HasBlock(pos + Voxel.faceDirs[face])) continue;
+            if (pos.y == 0 && face != (int)Voxel.Face.TOP) continue;//最下層的 voxel 只需渲染最上面的方塊即可
 
             vertices.AddRange(Voxel.faceIndexs[face].Select(x => Voxel.vertices[x] + pos));
             this.AddTexture(blockId, (Voxel.Face)face);
@@ -128,18 +130,18 @@ public class Chunk
 
     public void AddTexture(int blockId, Voxel.Face face)
     {
-        var block = this.terrain.textureDatas[blockId];
+        var block = this.terrain.GetVoxelInfo(blockId);
 
         var textureIndex = block.GetTexture(face);
 
-        float wUnit = 1f / TextureData.wNum;
-        float hUnit = 1f / TextureData.hNum;
+        float wUnit = 1f / VoxelData.wNum;
+        float hUnit = 1f / VoxelData.hNum;
 
         //左下角
-        float y = textureIndex / TextureData.wNum;
-        float x = textureIndex % TextureData.wNum;
+        float y = textureIndex / VoxelData.wNum;
+        float x = textureIndex % VoxelData.wNum;
 
-        y = TextureData.hNum - 1 - y;
+        y = VoxelData.hNum - 1 - y;
 
         x *= wUnit;
         y *= hUnit;
@@ -148,5 +150,31 @@ public class Chunk
         uvs.Add(new Vector2(x, y + hUnit));
         uvs.Add(new Vector2(x + wUnit, y + hUnit));
         uvs.Add(new Vector2(x + wUnit, y));
+    }
+
+    bool ValidArea(int x, int y, int z)
+    {
+        if (x < 0 || y < 0 || z < 0) return false;
+        if (x >= width || y >= height || z >= width) return false;
+
+        return true;
+    }
+}
+
+public class ChunkCoord
+{
+    public int x;
+    public int z;
+
+    public ChunkCoord(int x, int z)
+    {
+        this.x = x;
+        this.z = z;
+    }
+
+    public bool Equals(ChunkCoord coord)
+    {
+        return x == coord.x &&
+               z == coord.z;
     }
 }

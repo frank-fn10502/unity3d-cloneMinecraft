@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 public class Voxel
 {
@@ -12,6 +13,15 @@ public class Voxel
         RIGHT,
         TOP,
         BOTTOM
+    }
+    public enum Type
+    {
+        Air = 0,
+        BedRock,
+        Grass,
+        Stone,
+
+        NumberOfMyEnum
     }
     public const int verticesPerFace = 4;
     public static readonly Vector3[] vertices = new Vector3[8] {
@@ -44,4 +54,12 @@ public class Voxel
     };
 
     public static readonly int[] triangleIndex = new int[6] { 0, 1, 3, 3, 1, 2 };
+
+    public static readonly VoxelData[] voxelTypes = new VoxelData[(int)Type.NumberOfMyEnum]{
+        new VoxelData(0, 0, 0, 0, 0, 0, false),
+        new VoxelData(17, 17, 17, 17, 17, 17),
+        new VoxelData(3, 3, 3, 3, 0, 2),
+        new VoxelData(1, 1, 1, 1, 1, 1),
+    };
 }
+

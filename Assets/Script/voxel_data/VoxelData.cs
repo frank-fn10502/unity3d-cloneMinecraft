@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-public class TextureData
+public class VoxelData
 {
     public static readonly int wNum = 16;
     public static readonly int hNum = 16;
@@ -28,7 +28,7 @@ public class TextureData
     /// <summary>
     /// texture map 的對應位置，左上為 0，右下為最大數值
     /// </summary>
-    public TextureData(int front, int back, int left, int right, int top, int bottom, bool isSolid = true)
+    public VoxelData(int front, int back, int left, int right, int top, int bottom, bool isSolid = true)
     {
         this.front = front;
         this.back = back;
@@ -53,30 +53,5 @@ public class TextureData
             default:
                 return 0;
         }
-    }
-}
-
-public class Air : TextureData
-{
-    public Air() : base(0, 0, 0, 0, 0, 0, false)
-    {
-    }
-}
-public class BedRock : TextureData
-{
-    public BedRock() : base(17, 17, 17, 17, 17, 17)
-    {
-    }
-}
-public class Grass : TextureData
-{
-    public Grass() : base(3, 3, 3, 3, 0, 2)
-    {
-    }
-}
-public class Stone : TextureData
-{
-    public Stone() : base(1, 1, 1, 1, 1, 1)
-    {
     }
 }
