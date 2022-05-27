@@ -9,8 +9,8 @@ public class Chunk
 {
     public static readonly byte width = 16, height = 16;
     private readonly Terrain terrain;
-
     private readonly ChunkCoord coord;
+    
     GameObject gameObj;
     MeshFilter meshFilter;
     MeshRenderer meshRenderer;
@@ -28,6 +28,12 @@ public class Chunk
         set { this.gameObj.SetActive(value); }
     }
 
+    VoxelTextureMap voxelTextureMap{
+        get{
+            return VoxelTextureMap.getVoxelTextureMap();
+        }
+    }
+
     public Vector3 Position
     {
         get { return this.gameObj.transform.position; }
@@ -41,7 +47,7 @@ public class Chunk
         this.gameObj = new GameObject();
         this.meshFilter = this.gameObj.AddComponent<MeshFilter>();
         this.meshRenderer = this.gameObj.AddComponent<MeshRenderer>();
-        this.meshRenderer.material = this.terrain.material;
+        this.meshRenderer.material = voxelTextureMap.material;
 
         this.gameObj.transform.SetParent(this.terrain.Transform);
         this.gameObj.name = $"chunk {this.coord.x}, {this.coord.z}";
@@ -96,23 +102,24 @@ public class Chunk
             blockId = this.map[x, y, z];
 
 
-        return this.terrain.GetVoxelInfo(blockId).IsSolid;
+        return voxelTextureMap.GetVoxelInfo(blockId).IsSolid;
     }
 
     private void AddVoxelData(Vector3 pos)
     {
         int blockId = this.map[(int)pos.x, (int)pos.y, (int)pos.z];
-        foreach (int face in Enum.GetValues(typeof(Voxel.Face)))
+        var voxelInfo = voxelTextureMap.GetVoxelInfo(blockId);
+        foreach (int face in Enum.GetValues(typeof(VoxelInfo.Face)))
         {
-            if (HasBlock(pos + Voxel.faceDirs[face])) continue;
-            if (pos.y == 0 && face != (int)Voxel.Face.TOP) continue;//最下層的 voxel 只需渲染最上面的方塊即可
+            if (HasBlock(pos + VoxelInfo.faceDirs[face])) continue;
+            if (pos.y == 0 && face != (int)VoxelInfo.Face.TOP) continue;//最下層的 voxel 只需渲染最上面的方塊即可
 
-            vertices.AddRange(Voxel.faceIndexs[face].Select(x => Voxel.vertices[x] + pos));
-            this.AddTexture(blockId, (Voxel.Face)face);
+            vertices.AddRange(VoxelInfo.faceIndexs[face].Select(x => VoxelInfo.vertices[x] + pos));
+            uvs.AddRange(voxelInfo.GetTextureUvs((VoxelInfo.Face)face));
 
-            triangles.AddRange(Voxel.triangleIndex.Select(x => vertexBase + x));
+            triangles.AddRange(VoxelInfo.triangleIndex.Select(x => vertexBase + x));
 
-            vertexBase += Voxel.verticesPerFace;
+            vertexBase += VoxelInfo.verticesPerFace;
         }
     }
 
@@ -126,30 +133,6 @@ public class Chunk
         mesh.RecalculateNormals();
 
         meshFilter.mesh = mesh;
-    }
-
-    public void AddTexture(int blockId, Voxel.Face face)
-    {
-        var block = this.terrain.GetVoxelInfo(blockId);
-
-        var textureIndex = block.GetTexture(face);
-
-        float wUnit = 1f / VoxelData.wNum;
-        float hUnit = 1f / VoxelData.hNum;
-
-        //左下角
-        float y = textureIndex / VoxelData.wNum;
-        float x = textureIndex % VoxelData.wNum;
-
-        y = VoxelData.hNum - 1 - y;
-
-        x *= wUnit;
-        y *= hUnit;
-
-        uvs.Add(new Vector2(x, y));
-        uvs.Add(new Vector2(x, y + hUnit));
-        uvs.Add(new Vector2(x + wUnit, y + hUnit));
-        uvs.Add(new Vector2(x + wUnit, y));
     }
 
     bool ValidArea(int x, int y, int z)

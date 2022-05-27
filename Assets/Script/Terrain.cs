@@ -10,13 +10,15 @@ public class Terrain
     static readonly int worldSize = 100;
     static readonly int viewDist = 5;
 
-    public Material material { get; private set; }
-
     Chunk[,] map = new Chunk[Terrain.worldSize, Terrain.worldSize];
 
     LaodArea laodArea;
 
-    readonly VoxelData[] textureDatas = new VoxelData[(int)Voxel.Type.NumberOfMyEnum];
+    VoxelTextureMap voxelTextureMap{
+        get{
+            return VoxelTextureMap.getVoxelTextureMap();
+        }
+    }
 
 
     public Transform Transform { get; private set; }
@@ -36,12 +38,6 @@ public class Terrain
     public Terrain(Transform transform)
     {
         this.Transform = transform;
-        this.material = Resources.Load<Material>("Materials/terrain");
-
-        for (int i = 0; i < (int)Voxel.Type.NumberOfMyEnum; i++)
-        {
-            textureDatas[i] = Voxel.voxelTypes[i];
-        }
     }
 
     public void initTerrain()
@@ -178,18 +174,13 @@ public class Terrain
         return new ChunkCoord(x, z);
     }
 
-    public VoxelData GetVoxelInfo(int blockId)
-    {
-        return this.textureDatas[blockId];
-    }
-
     public byte GetVoxelType(Vector3 pos)
     {
-        if (!this.ValidArea(pos)) return (int)Voxel.Type.Air;
-        if (pos.y == 0) return (int)Voxel.Type.BedRock;
-        if (pos.y == Chunk.height - 1) return (int)Voxel.Type.Grass;
+        if (!this.ValidArea(pos)) return voxelTextureMap.Air.Id;
+        if (pos.y == 0) return voxelTextureMap.BedRock.Id;
+        if (pos.y == Chunk.height - 1) return voxelTextureMap.Grass.Id;
 
-        return (int)Voxel.Type.Stone;
+        return voxelTextureMap.Stone.Id;
     }
 
     bool ValidArea(Vector3 pos)

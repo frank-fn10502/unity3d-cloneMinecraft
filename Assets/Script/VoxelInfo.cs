@@ -1,9 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using System;
 
-public class Voxel
+
+public class VoxelInfo
 {
     public enum Face
     {
@@ -14,15 +14,9 @@ public class Voxel
         TOP,
         BOTTOM
     }
-    public enum Type
-    {
-        Air = 0,
-        BedRock,
-        Grass,
-        Stone,
 
-        NumberOfMyEnum
-    }
+    #region static 區段
+
     public const int verticesPerFace = 4;
     public static readonly Vector3[] vertices = new Vector3[8] {
         new Vector3(0f,0f,0f),
@@ -55,11 +49,44 @@ public class Voxel
 
     public static readonly int[] triangleIndex = new int[6] { 0, 1, 3, 3, 1, 2 };
 
-    public static readonly VoxelData[] voxelTypes = new VoxelData[(int)Type.NumberOfMyEnum]{
-        new VoxelData(0, 0, 0, 0, 0, 0, false),
-        new VoxelData(17, 17, 17, 17, 17, 17),
-        new VoxelData(3, 3, 3, 3, 0, 2),
-        new VoxelData(1, 1, 1, 1, 1, 1),
-    };
-}
+    #endregion
 
+    readonly List<Vector2> front;
+    readonly List<Vector2> back;
+    readonly List<Vector2> left;
+    readonly List<Vector2> right;
+    readonly List<Vector2> top;
+    readonly List<Vector2> bottom;
+
+    public byte Id { get; private set; }
+    public bool IsSolid { get; private set; }
+
+    public VoxelInfo(byte id, List<Vector2> front, List<Vector2> back, List<Vector2> left, List<Vector2> right, List<Vector2> top, List<Vector2> bottom, bool isSolid = true)
+    {
+        this.Id = id;
+        this.IsSolid = isSolid;
+
+        this.front = front;
+        this.back = back;
+        this.left = left;
+        this.right = right;
+        this.top = top;
+        this.bottom = bottom;
+    }
+
+    public List<Vector2> GetTextureUvs(VoxelInfo.Face face)
+    {
+        switch (face)
+        {
+            case VoxelInfo.Face.FRONT: return this.front;
+            case VoxelInfo.Face.BACK: return this.back;
+            case VoxelInfo.Face.LEFT: return this.left;
+            case VoxelInfo.Face.RIGHT: return this.right;
+            case VoxelInfo.Face.TOP: return this.top;
+            case VoxelInfo.Face.BOTTOM: return this.bottom;
+
+            default:
+                return null;
+        }
+    }
+}
