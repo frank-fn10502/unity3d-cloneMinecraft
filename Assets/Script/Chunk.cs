@@ -7,7 +7,7 @@ using UnityEngine;
 
 public class Chunk
 {
-    public static readonly byte width = 5, height = 2;
+    public static readonly byte width = 16, height = 16;
     private readonly Terrain terrain;
 
     private readonly ChunkCoord coord;

@@ -13,6 +13,7 @@ public class World : MonoBehaviour
     private void Awake()
     {
         terrain = new Terrain(this.gameObject.transform);
+
     }
     private void Start()
     {

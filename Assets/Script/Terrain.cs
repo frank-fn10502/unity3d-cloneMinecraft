@@ -7,8 +7,8 @@ using UnityEngine;
 
 public class Terrain
 {
-    static readonly int worldSize = 10;
-    static readonly int viewDist = 2;
+    static readonly int worldSize = 100;
+    static readonly int viewDist = 5;
 
     public Material material { get; private set; }
 
@@ -16,7 +16,9 @@ public class Terrain
 
     LaodArea laodArea;
 
-    readonly VoxelData[] textureDatas = new VoxelData[256];
+    readonly VoxelData[] textureDatas = new VoxelData[(int)Voxel.Type.NumberOfMyEnum];
+
+
     public Transform Transform { get; private set; }
 
     public Vector3 MidPosition
@@ -36,10 +38,10 @@ public class Terrain
         this.Transform = transform;
         this.material = Resources.Load<Material>("Materials/terrain");
 
-        textureDatas[0] = Voxel.voxelTypes[(int)Voxel.Type.Air];
-        textureDatas[1] = Voxel.voxelTypes[(int)Voxel.Type.BedRock];
-        textureDatas[2] = Voxel.voxelTypes[(int)Voxel.Type.Grass];
-        textureDatas[3] = Voxel.voxelTypes[(int)Voxel.Type.Stone];
+        for (int i = 0; i < (int)Voxel.Type.NumberOfMyEnum; i++)
+        {
+            textureDatas[i] = Voxel.voxelTypes[i];
+        }
     }
 
     public void initTerrain()
@@ -77,6 +79,7 @@ public class Terrain
             }
         }
     }
+
     /// <summary>
     /// 在 2 維方向的移動最多只會 1.長方形區塊 2. L 型區塊
     /// 處理第二種狀態需要將 L 型切成兩個不相交的長方形，目前採用 "側邊長方型(沒有上/下相交) + (上/下)全通長方形"
