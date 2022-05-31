@@ -14,6 +14,7 @@ public class Chunk
     GameObject gameObj;
     MeshFilter meshFilter;
     MeshRenderer meshRenderer;
+    MeshCollider meshColider;
 
     int vertexBase;
     List<Vector3> vertices = new List<Vector3>();
@@ -48,6 +49,7 @@ public class Chunk
         this.meshFilter = this.gameObj.AddComponent<MeshFilter>();
         this.meshRenderer = this.gameObj.AddComponent<MeshRenderer>();
         this.meshRenderer.material = voxelTextureMap.material;
+        this.meshColider = this.gameObj.AddComponent<MeshCollider>();
 
         this.gameObj.transform.SetParent(this.terrain.Transform);
         this.gameObj.name = $"chunk {this.coord.x}, {this.coord.z}";
@@ -133,6 +135,7 @@ public class Chunk
         mesh.RecalculateNormals();
 
         meshFilter.mesh = mesh;
+        meshColider.sharedMesh = mesh;
     }
 
     bool ValidArea(int x, int y, int z)

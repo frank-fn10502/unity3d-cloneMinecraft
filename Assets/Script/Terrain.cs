@@ -7,164 +7,151 @@ using UnityEngine;
 
 public class Terrain
 {
+    #region LoadArea
+    class LoadArea{
+        public int top;
+        public int bottom;
+        public int left;
+        public int right;
+
+        public LoadArea(ChunkCoord mid)
+        {
+            this.top = mid.z + Terrain.viewDist;
+            this.bottom = mid.z - Terrain.viewDist;
+            this.left = mid.x - Terrain.viewDist;
+            this.right = mid.x + Terrain.viewDist;
+
+            this.validLoadArea();
+        }
+
+        void validLoadArea(){
+            if(top >= Terrain.worldSize){
+                this.top = Terrain.worldSize - 1;
+                this.bottom = this.top - Terrain.viewDist * 2;
+            }
+            if(bottom < 0){
+                this.bottom = 0;
+                this.top = this.bottom + Terrain.viewDist * 2;
+            }
+            if(left < 0){
+                this.left = 0;
+                this.right = this.left + Terrain.viewDist * 2;
+            }
+            if(right >= Terrain.worldSize){
+                this.right = Terrain.worldSize - 1;
+                this.left = this.right - Terrain.viewDist * 2;
+            }
+        }
+    }
+    #endregion
+
     static readonly int worldSize = 100;
-    static readonly int viewDist = 5;
+    static readonly int viewDist = 3;
 
     Chunk[,] map = new Chunk[Terrain.worldSize, Terrain.worldSize];
 
-    LaodArea laodArea;
+    List<Chunk> loadingChunks;
+    ChunkCoord midChunkCoord;
+
+    List<ChunkCoord> chunkToCreate;
 
     VoxelTextureMap voxelTextureMap{
-        get{
-            return VoxelTextureMap.getVoxelTextureMap();
-        }
+        get { return VoxelTextureMap.getVoxelTextureMap(); }
     }
 
-
     public Transform Transform { get; private set; }
+    Transform player;
 
     public Vector3 MidPosition
     {
         get
         {
             return new Vector3(
-                laodArea.Mid.x * Chunk.width + (Chunk.width / 2),
+                (Terrain.worldSize / 2f) * Chunk.width + (Chunk.width / 2),
                 Chunk.height + 3f,
-                laodArea.Mid.z * Chunk.width + (Chunk.width / 2)
+                (Terrain.worldSize / 2f) * Chunk.width + (Chunk.width / 2)
                 );
         }
     }
 
-    public Terrain(Transform transform)
+    public Terrain(Transform transform, Transform player)
     {
         this.Transform = transform;
+        this.player = player;
+        this.loadingChunks = new List<Chunk>();
+        this.chunkToCreate = new List<ChunkCoord>();
+
+        this.midChunkCoord = this.Convert2ChunkCoord(this.MidPosition);
+        this.UpdateLoadArea();
     }
 
-    public void initTerrain()
-    {
-        int half = Convert.ToInt16(Math.Ceiling(Terrain.worldSize / 2f));
+    public bool CheckForVoxel(Vector3 pos){
+        var cood = Convert2ChunkCoord(pos);
+        if(map[cood.x, cood.z] == null) return false;
 
-        this.laodArea = new LaodArea(Terrain.viewDist, new ChunkCoord(half, half));
-
-        ActivateArea();
+        var chunk = map[cood.x, cood.z];
+        return chunk.HasBlock(pos);
     }
-    public void updateLoadChunk(Vector3 midPos)
+
+    public IEnumerator UpdateLoadChunk()
     {
-        var midChunk = this.Convert2ChunkCoord(midPos);
-        if (laodArea.Mid.Equals(midChunk)) return;
-
-        var preLoadArea = this.laodArea;
-        this.laodArea = new LaodArea(Terrain.viewDist, midChunk);
-
-        ActivateArea();
-        DeActivateArea(preLoadArea);
-    }
-    void ActivateArea()
-    {
-        if (!ValidChunkIndex(this.laodArea.Left) && !ValidChunkIndex(this.laodArea.Right)) return;
-        if (!ValidChunkIndex(this.laodArea.Bottom) && !ValidChunkIndex(this.laodArea.Top)) return;
-
-        for (int x = LimitValue(laodArea.Left); x <= LimitValue(laodArea.Right); x++)
+        while(true)
         {
-            for (int z = LimitValue(laodArea.Bottom); z <= LimitValue(laodArea.Top); z++)
+            //生成新的 chunk
+            while(chunkToCreate.Count > 0)
             {
-                if (map[x, z] == null)
-                    map[x, z] = new Chunk(this, new ChunkCoord(x, z));
-                else if (!map[x, z].IsActive)
-                    map[x, z].IsActive = true;
+                var coord = chunkToCreate[0];
+                this.map[coord.x, coord.z] = new Chunk(this, coord);
+
+                chunkToCreate.RemoveAt(0);
+                this.loadingChunks.Add(this.map[coord.x, coord.z]);
+
+                yield return null;
+            }
+
+            //更新顯示區域
+            var midChunkCoord = this.Convert2ChunkCoord(this.player.position);
+            if (this.midChunkCoord.x != midChunkCoord.x || this.midChunkCoord.z != midChunkCoord.z) 
+            {
+                this.midChunkCoord = midChunkCoord;
+                UpdateLoadArea();
+            }
+
+            yield return null;
+        }
+    }
+    
+    void UpdateLoadArea()
+    {
+        var loadArea = new LoadArea(this.midChunkCoord);
+
+        var oldLoadingChunks = this.loadingChunks;
+        var newLoadingChunks = new List<Chunk>();
+
+        for (int i = loadArea.left; i <= loadArea.right; i++)
+        {
+            for (int j = loadArea.bottom ; j <= loadArea.top ; j++)
+            {
+                if(map[i,j] != null)
+                    newLoadingChunks.Add(map[i,j]);
+                else
+                {
+                    chunkToCreate.Add(new ChunkCoord(i, j));
+                }
             }
         }
+
+        newLoadingChunks.Except(oldLoadingChunks).ToList().ForEach( chunk => chunk.IsActive = true);
+        oldLoadingChunks.Except(newLoadingChunks).ToList().ForEach( chunk => chunk.IsActive = false);
+
+        // chunkToCreate.ForEach( coord => {
+        //     this.map[coord.x, coord.z] = new Chunk(this, coord);
+        //     newLoadingChunks.Add(this.map[coord.x, coord.z]);
+        // });
+
+        this.loadingChunks = newLoadingChunks;
     }
-
-    /// <summary>
-    /// 在 2 維方向的移動最多只會 1.長方形區塊 2. L 型區塊
-    /// 處理第二種狀態需要將 L 型切成兩個不相交的長方形，目前採用 "側邊長方型(沒有上/下相交) + (上/下)全通長方形"
-    /// </summary>
-    /// <param name="preLoadArea">上一次的有效區塊</param>
-    int DeActivateArea(LaodArea preLoadArea)
-    {
-        int x1 = Math.Min(laodArea.Right, preLoadArea.Right);
-        int x0 = Math.Max(laodArea.Left, preLoadArea.Left);
-
-        int z1 = Math.Min(laodArea.Top, preLoadArea.Top);
-        int z0 = Math.Max(laodArea.Bottom, preLoadArea.Bottom);
-
-        int sx = -1;
-        int ex = -1;
-        int sz = -1;
-        int ez = -1;
-        //左右區塊
-        //向左走
-        if (x0 == preLoadArea.Left)
-        {
-            sx = x1 + 1;
-            ex = preLoadArea.Right;
-            sz = z0;
-            ez = z1;
-        }
-        else
-        {
-            sx = preLoadArea.Left;
-            ex = x0 - 1;
-            sz = z0;
-            ez = z1;
-        }
-        var disArea = new DisableArea(ez, ex, sz, sx);
-        if (!disArea.HasValidArea) return -1;
-        DeActivatColumn(disArea);
-
-        //上下區塊
-        //向上走
-        if (z0 == laodArea.Bottom)
-        {
-            sz = preLoadArea.Bottom;
-            ez = z0 - 1;
-        }
-        else
-        {
-            sz = z1 + 1;
-            ez = preLoadArea.Top;
-        }
-        disArea = new DisableArea(ez, preLoadArea.Right, sz, preLoadArea.Left);
-        if (!disArea.HasValidArea) return -1;
-        DeActivatRow(disArea);
-
-        return 0;
-    }
-    void DeActivatColumn(DisableArea area)
-    {
-        for (int x = area.Left; x <= area.Right; x++)
-        {
-            for (int z = area.Bottom; z <= area.Top; z++)
-            {
-                if (this.map[x, z] != null)
-                    this.map[x, z].IsActive = false;
-            }
-        }
-    }
-    void DeActivatRow(DisableArea area)
-    {
-        for (int z = area.Bottom; z <= area.Top; z++)
-        {
-            for (int x = area.Left; x <= area.Right; x++)
-            {
-                if (this.map[x, z] != null)
-                    this.map[x, z].IsActive = false;
-            }
-        }
-    }
-
-    public static bool ValidChunkIndex(int index)
-    {
-        return index >= 0 && index < Terrain.worldSize;
-    }
-    public static int LimitValue(int index)
-    {
-        if (index < 0) return 0;
-        if (index >= Terrain.worldSize) return Terrain.worldSize - 1;
-
-        return index;
-    }
+    
 
     ChunkCoord Convert2ChunkCoord(Vector3 pos)
     {
@@ -189,66 +176,5 @@ public class Terrain
                pos.z >= 0 && pos.z < Chunk.width * Terrain.worldSize &&
                pos.y >= 0 && pos.y < Chunk.height;
 
-    }
-}
-
-class DisableArea
-{
-    private int top;
-    private int right;
-    private int bottom;
-    private int left;
-
-    public int Top { get => top; }
-    public int Right { get => right; }
-    public int Bottom { get => bottom; }
-    public int Left { get => left; }
-
-    public DisableArea(int top, int right, int bottom, int left)
-    {
-        this.top = top;
-        this.right = right;
-        this.bottom = bottom;
-        this.left = left;
-    }
-
-    public bool HasValidArea
-    {
-        get
-        {
-            return Terrain.ValidChunkIndex(Top) && Terrain.ValidChunkIndex(Right) && Terrain.ValidChunkIndex(Bottom) && Terrain.ValidChunkIndex(Left);
-        }
-    }
-
-
-}
-class LaodArea
-{
-    private readonly int viewDist;
-
-    ChunkCoord mid;
-
-    public ChunkCoord Mid
-    {
-        get { return mid; }
-        set
-        {
-            this.mid = value;
-            this.Top = this.mid.z + this.viewDist;
-            this.Right = this.mid.x + this.viewDist;
-            this.Bottom = this.mid.z - this.viewDist;
-            this.Left = this.mid.x - this.viewDist;
-        }
-    }
-
-    public int Top { get; private set; }
-    public int Right { get; private set; }
-    public int Bottom { get; private set; }
-    public int Left { get; private set; }
-
-    public LaodArea(int viewDist, ChunkCoord mid)
-    {
-        this.viewDist = viewDist;
-        this.Mid = mid;
     }
 }

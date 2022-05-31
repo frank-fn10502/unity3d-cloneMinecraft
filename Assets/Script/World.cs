@@ -12,16 +12,15 @@ public class World : MonoBehaviour
 
     private void Awake()
     {
-        terrain = new Terrain(this.gameObject.transform);
-
+        terrain = new Terrain(this.gameObject.transform, this.player);
     }
     private void Start()
     {
-        this.terrain.initTerrain();
         this.player.position = this.terrain.MidPosition;
+
+        StartCoroutine(this.terrain.UpdateLoadChunk());
     }
     private void Update()
     {
-        this.terrain.updateLoadChunk(this.player.position);
     }
 }
