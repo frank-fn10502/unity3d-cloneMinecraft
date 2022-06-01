@@ -30,7 +30,7 @@ public class PlayerController : MonoBehaviour
     void Update()
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        RaycastHit hitPoint;
+        RaycastHit hit;
         Vector3 forward = transform.TransformDirection(Vector3.forward);
         Vector3 right = transform.TransformDirection(Vector3.right);
         bool isRunning = Input.GetKey(KeyCode.LeftShift);
@@ -39,12 +39,11 @@ public class PlayerController : MonoBehaviour
         float movementDirectionY = moveDirection.y;
         moveDirection = (forward * curSpeedX) + (right * curSpeedY);
 
-        if(Physics.Raycast(ray, out hitPoint, Mathf.Infinity))
-         {
- 
-             if(Physics.Raycast(ray, out hitPoint, Mathf.Infinity) == GameObject.FindGameObjectWithTag("world")){
-                Debug.Log("hit world");
-             }
+        if (Input.GetMouseButton(0) && Physics.Raycast(ray, out hit))
+        {
+            //Debug.DrawLine(Camera.main.transform.position, hit.transform.position, Color.red, 0.1f, true);
+            if(hit.transform.gameObject==GameObject.FindGameObjectWithTag("Cube"))
+                Debug.Log(hit.transform.position);
             
         }
 
