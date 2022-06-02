@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class toolBar : MonoBehaviour
 {
-    public World world;
+    World world;
     //public Player player;
     public RectTransform highlight;
     public ItemSlot[] itemSlots;
@@ -13,7 +13,7 @@ public class toolBar : MonoBehaviour
 
     private void Start()
     {
-        //world = GameObject.Find("World").GetComponent<World>();
+        world = GameObject.Find("world").GetComponent<World>();
         foreach (ItemSlot slot in itemSlots)
         {
             slot.icon.sprite = world.blocktypes[slot.itemID].icon;
@@ -36,7 +36,7 @@ public class toolBar : MonoBehaviour
                 slotIndex = itemSlots.Length - 1;
 
             Vector3 temp = new Vector3(24, 0, 0);
-            highlight.position = itemSlots[slotIndex].icon.transform.position - temp;
+            highlight.position = itemSlots[slotIndex].icon.transform.position;
             //Debug.Log(highlight.position);
             //player.selectedBlockIndex = itemSlots[slotIndex].itemID;
         }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class World : MonoBehaviour
 {
@@ -25,6 +26,7 @@ public class World : MonoBehaviour
     {
     }
 
+    [System.Serializable]
     public class BlockType
     {
         public string blockName;

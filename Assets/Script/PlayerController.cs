@@ -1,6 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.SceneManagement;
+
 
 [RequireComponent(typeof(CharacterController))]
 
@@ -13,6 +16,9 @@ public class PlayerController : MonoBehaviour
     public Camera playerCamera;
     public float lookSpeed = 2.0f;
     public float lookXLimit = 45.0f;
+     // Pause UI
+    public GameObject PauseWindow;
+    private bool isPause;
 
     CharacterController characterController;
     Vector3 moveDirection = Vector3.zero;
@@ -20,28 +26,50 @@ public class PlayerController : MonoBehaviour
     [HideInInspector]
     public bool canMove = true;
 
+    void PauseGame()
+    {
+        isPause = !isPause;
+        Debug.Log("pause!!!");
+        if (isPause == true)
+        {
+            //PauseButton.image.sprite = Resources.Load<Sprite>("Sprites/resume");
+            PauseWindow.gameObject.SetActive(true);
+            Time.timeScale = 0;
+        }
+        else
+        {
+            //PauseButton.image.sprite = Resources.Load<Sprite>("Sprites/pause");
+            PauseWindow.gameObject.SetActive(false);
+            Time.timeScale = 1;
+        }
+    }
+
     void Start()
     {
         characterController = GetComponent<CharacterController>();
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+
+        isPause = false;
     }
 
     void Update()
     {
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        RaycastHit hit;
         Vector3 forward = transform.TransformDirection(Vector3.forward);
         Vector3 right = transform.TransformDirection(Vector3.right);
         bool isRunning = Input.GetKey(KeyCode.LeftShift);
         float curSpeedX = canMove ? (isRunning ? runningSpeed : walkingSpeed) * Input.GetAxis("Vertical") : 0;
         float curSpeedY = canMove ? (isRunning ? runningSpeed : walkingSpeed) * Input.GetAxis("Horizontal") : 0;
         float movementDirectionY = moveDirection.y;
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        RaycastHit hit;
+
         moveDirection = (forward * curSpeedX) + (right * curSpeedY);
+
+        if (Input.GetKeyDown(KeyCode.Escape)) PauseGame();
 
         if (Input.GetMouseButton(0) && Physics.Raycast(ray, out hit))
         {
-            //Debug.DrawLine(Camera.main.transform.position, hit.transform.position, Color.red, 0.1f, true);
             if(hit.transform.gameObject==GameObject.FindGameObjectWithTag("Cube"))
                 Debug.Log(hit.transform.position);
             
