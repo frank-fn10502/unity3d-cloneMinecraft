@@ -19,30 +19,13 @@ public class PlayerController : MonoBehaviour
      // Pause UI
     public GameObject PauseWindow;
     private bool isPause;
+    public Vector3 targetPosition;
 
     CharacterController characterController;
     Vector3 moveDirection = Vector3.zero;
     float rotationX = 0;
     [HideInInspector]
     public bool canMove = true;
-
-    void PauseGame()
-    {
-        isPause = !isPause;
-        Debug.Log("pause!!!");
-        if (isPause == true)
-        {
-            //PauseButton.image.sprite = Resources.Load<Sprite>("Sprites/resume");
-            PauseWindow.gameObject.SetActive(true);
-            Time.timeScale = 0;
-        }
-        else
-        {
-            //PauseButton.image.sprite = Resources.Load<Sprite>("Sprites/pause");
-            PauseWindow.gameObject.SetActive(false);
-            Time.timeScale = 1;
-        }
-    }
 
     void Start()
     {
@@ -70,9 +53,11 @@ public class PlayerController : MonoBehaviour
 
         if (Input.GetMouseButton(0) && Physics.Raycast(ray, out hit))
         {
-            if(hit.transform.gameObject==GameObject.FindGameObjectWithTag("Cube"))
-                Debug.Log(hit.transform.position);
-            
+            if(hit.transform.gameObject==GameObject.FindGameObjectWithTag("Cube")){
+                targetPosition = hit.transform.position;
+                Debug.Log(targetPosition);
+                Debug.Log(hit.transform.name);
+            }
         }
 
         if (Input.GetButton("Jump") && canMove && characterController.isGrounded)
@@ -83,7 +68,7 @@ public class PlayerController : MonoBehaviour
         {
             moveDirection.y = movementDirectionY;
         }
-
+              
         if (!characterController.isGrounded)
         {
             moveDirection.y -= gravity * Time.deltaTime;
@@ -97,6 +82,21 @@ public class PlayerController : MonoBehaviour
             rotationX = Mathf.Clamp(rotationX, -lookXLimit, lookXLimit);
             playerCamera.transform.localRotation = Quaternion.Euler(rotationX, 0, 0);
             transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * lookSpeed, 0);
+        }
+    }
+
+    void PauseGame()
+    {
+        isPause = !isPause;
+        if (isPause == true)
+        {
+            PauseWindow.gameObject.SetActive(true);
+            Time.timeScale = 0;
+        }
+        else
+        {
+            PauseWindow.gameObject.SetActive(false);
+            Time.timeScale = 1;
         }
     }
 }

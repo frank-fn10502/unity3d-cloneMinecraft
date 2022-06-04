@@ -35,9 +35,7 @@ public class toolBar : MonoBehaviour
             else if (slotIndex < 0)
                 slotIndex = itemSlots.Length - 1;
 
-            Vector3 temp = new Vector3(24, 0, 0);
             highlight.position = itemSlots[slotIndex].icon.transform.position;
-            //Debug.Log(highlight.position);
             //player.selectedBlockIndex = itemSlots[slotIndex].itemID;
         }
     }

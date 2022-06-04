@@ -13,10 +13,17 @@ public class VoxelTextureMap
 
     public Material material { get; private set; }
 
-    public VoxelInfo Air { get; private set; }
     public VoxelInfo BedRock { get; private set; }
-    public VoxelInfo Grass { get; private set; }
+    public VoxelInfo Bricks { get; private set; }
+    public VoxelInfo Cobblestone { get; private set; }
+    public VoxelInfo Dirt { get; private set; }
+    public VoxelInfo Grass { get; private set; } 
+    public VoxelInfo Planks { get; private set; }
+    public VoxelInfo Sand { get; private set; }
     public VoxelInfo Stone { get; private set; }
+    public VoxelInfo Wood { get; private set; }
+    public VoxelInfo Air { get; private set; }
+    
 
     VoxelInfo[] voxelInfoList;
 
@@ -28,12 +35,25 @@ public class VoxelTextureMap
         BedRock = createVoxelInfo(1, 17, 17, 17, 17, 17, 1);
         Grass = createVoxelInfo(2, 3, 3, 3, 3, 0, 2);
         Stone = createVoxelInfo(3, 1, 1, 1, 1, 1, 1);
+        Bricks = createVoxelInfo(4, 7, 7, 7, 7, 7, 7);
+        Cobblestone = createVoxelInfo(5, 62, 62, 62, 62, 62, 62);
+        Dirt = createVoxelInfo(6, 2, 2, 2, 2, 2, 2);
+        Planks = createVoxelInfo(7, 4, 4, 4, 4, 4, 4);
+        Sand = createVoxelInfo(8, 18, 18, 18, 18, 18, 18);
+        Wood = createVoxelInfo(9, 20, 20, 20, 20, 21, 21); 
+        
 
         voxelInfoList = new VoxelInfo[]{
             Air,
             BedRock,
             Grass,
-            Stone
+            Stone,
+            Bricks,
+            Cobblestone,
+            Dirt,
+            Planks,
+            Sand,
+            Wood
         };
     }
 
