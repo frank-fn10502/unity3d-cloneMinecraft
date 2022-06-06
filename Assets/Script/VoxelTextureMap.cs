@@ -31,30 +31,29 @@ public class VoxelTextureMap
     {
         material = Resources.Load<Material>("Materials/terrain");
 
-        Air = createVoxelInfo(0, 0, 0, 0, 0, 0, 0, false);
-        BedRock = createVoxelInfo(1, 17, 17, 17, 17, 17, 1);
-        Grass = createVoxelInfo(2, 3, 3, 3, 3, 0, 2);
-        Stone = createVoxelInfo(3, 1, 1, 1, 1, 1, 1);
-        Bricks = createVoxelInfo(4, 7, 7, 7, 7, 7, 7);
-        Cobblestone = createVoxelInfo(5, 62, 62, 62, 62, 62, 62);
-        Dirt = createVoxelInfo(6, 2, 2, 2, 2, 2, 2);
-        Planks = createVoxelInfo(7, 4, 4, 4, 4, 4, 4);
-        Sand = createVoxelInfo(8, 18, 18, 18, 18, 18, 18);
-        Wood = createVoxelInfo(9, 20, 20, 20, 20, 21, 21); 
+        Air = createVoxelInfo(255, 0, 0, 0, 0, 0, 0, false);
+        BedRock = createVoxelInfo(0, 17, 17, 17, 17, 17, 1);
+        Grass = createVoxelInfo(4, 3, 3, 3, 3, 0, 2);
+        Stone = createVoxelInfo(7, 1, 1, 1, 1, 1, 1);
+        Bricks = createVoxelInfo(1, 7, 7, 7, 7, 7, 7);
+        Cobblestone = createVoxelInfo(2, 62, 62, 62, 62, 62, 62);
+        Dirt = createVoxelInfo(3, 2, 2, 2, 2, 2, 2);
+        Planks = createVoxelInfo(5, 4, 4, 4, 4, 4, 4);
+        Sand = createVoxelInfo(6, 18, 18, 18, 18, 18, 18);
+        Wood = createVoxelInfo(8, 20, 20, 20, 20, 21, 21); 
         
 
-        voxelInfoList = new VoxelInfo[]{
-            Air,
-            BedRock,
-            Grass,
-            Stone,
-            Bricks,
-            Cobblestone,
-            Dirt,
-            Planks,
-            Sand,
-            Wood
-        };
+        voxelInfoList = new VoxelInfo[256];
+        voxelInfoList[Air.Id] = Air;
+        voxelInfoList[BedRock.Id] = BedRock;
+        voxelInfoList[Grass.Id] = Grass;
+        voxelInfoList[Stone.Id] = Stone;
+        voxelInfoList[Bricks.Id] = Bricks;
+        voxelInfoList[Cobblestone.Id] = Cobblestone;
+        voxelInfoList[Dirt.Id] = Dirt;
+        voxelInfoList[Planks.Id] = Planks;
+        voxelInfoList[Sand.Id] = Sand;
+        voxelInfoList[Wood.Id] = Wood;
     }
 
     public static VoxelTextureMap getVoxelTextureMap(){

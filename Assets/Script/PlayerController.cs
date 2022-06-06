@@ -26,9 +26,11 @@ public class PlayerController : MonoBehaviour
     float rotationX = 0;
     [HideInInspector]
     public bool canMove = true;
+    World world;
 
     void Start()
     {
+        world = GameObject.Find("world").GetComponent<World>();
         characterController = GetComponent<CharacterController>();
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
@@ -57,6 +59,7 @@ public class PlayerController : MonoBehaviour
                 targetPosition = hit.transform.position;
                 Debug.Log(targetPosition);
                 Debug.Log(hit.transform.name);
+                Debug.Log(world.VoxelInfo.Id);
             }
         }
 

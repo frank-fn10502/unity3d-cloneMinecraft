@@ -14,11 +14,13 @@ public class toolBar : MonoBehaviour
     private void Start()
     {
         world = GameObject.Find("world").GetComponent<World>();
-        foreach (ItemSlot slot in itemSlots)
+        foreach (ItemSlot slot in itemSlots)// VoxelTextureMap.getVoxelTextureMap().voxelInfoList
         {
             slot.icon.sprite = world.blocktypes[slot.itemID].icon;
             slot.icon.enabled = true;
+            slot.VoxelInfo = VoxelTextureMap.getVoxelTextureMap().GetVoxelInfo(slot.itemID);
         }
+        world.VoxelInfo = itemSlots[slotIndex].VoxelInfo;
     }
 
     private void Update()
@@ -37,6 +39,7 @@ public class toolBar : MonoBehaviour
 
             highlight.position = itemSlots[slotIndex].icon.transform.position;
             //player.selectedBlockIndex = itemSlots[slotIndex].itemID;
+            world.VoxelInfo = itemSlots[slotIndex].VoxelInfo;
         }
     }
 
@@ -47,4 +50,5 @@ public class ItemSlot
 {
     public byte itemID;
     public Image icon;
+    public VoxelInfo VoxelInfo;
 }

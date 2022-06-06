@@ -10,7 +10,9 @@ public class World : MonoBehaviour
     //TODO 應該要用 Find 的方法...
     public Transform player;
     Terrain terrain;
+    
     public BlockType[] blocktypes;
+    public VoxelInfo VoxelInfo ;
 
     private void Awake()
     {
