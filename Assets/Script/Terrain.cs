@@ -94,10 +94,12 @@ public class Terrain
         if(chunk == null) return false;
         if(!chunk.IsActive) return false;
 
-        return chunk.HasBlock(pos);
+        // return chunk.HasBlock(pos);
+        return true;
     }
 
-    public void CreateVoxel(Vector3 pos, byte id){
+    public void CreateVoxel(Vector3 pos, Vector3 dir, byte id){
+        pos -= dir * .5f;
         if(!CheckForVoxel(pos)) return;
         if(!voxelTextureMap.isValidId(id)) return;
 
@@ -107,7 +109,8 @@ public class Terrain
         chunk.EditVoxel(pos, id);
     }
 
-    public void RemoveVoxel(Vector3 pos){
+    public void RemoveVoxel(Vector3 pos, Vector3 dir){
+        pos -= dir * .5f;
         if(!CheckForVoxel(pos)) return;
 
         var cood = Convert2ChunkCoord(pos);

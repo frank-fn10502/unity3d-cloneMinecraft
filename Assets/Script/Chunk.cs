@@ -80,6 +80,21 @@ public class Chunk
         return voxelTextureMap.GetVoxelInfo(blockId).IsSolid;
     }
 
+    public VoxelInfo GetBlock(Vector3 pos)
+    {
+        int x = Mathf.FloorToInt(pos.x);
+        int y = Mathf.FloorToInt(pos.y);
+        int z = Mathf.FloorToInt(pos.z);
+
+        int blockId = -1;
+        if (!this.ValidArea(x, y, z))
+            blockId = this.terrain.GetVoxelType(pos + this.Position);
+        else
+            blockId = this.map[x, y, z];
+
+         return voxelTextureMap.GetVoxelInfo(blockId);
+    }
+
     public void EditVoxel(Vector3 pos, byte id){
         int x = (int)pos.x;
         int y = (int)pos.y;
