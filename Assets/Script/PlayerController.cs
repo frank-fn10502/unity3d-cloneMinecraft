@@ -58,6 +58,7 @@ public class PlayerController : MonoBehaviour
             Debug.Log(hit.transform.name);
             Debug.Log(hit.point);
             Debug.Log(world.VoxelInfo.Id);
+            Debug.Log(ray.direction);
             // if(hit.transform.gameObject==GameObject.FindGameObjectWithTag("Cube")){
             //     targetPosition = hit.transform.position;
             //     Debug.Log(targetPosition);
