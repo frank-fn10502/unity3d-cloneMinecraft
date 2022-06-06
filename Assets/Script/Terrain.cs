@@ -122,6 +122,7 @@ public class Terrain
 
         var chunkPos = new Vector3((int)pos.x % Chunk.width , (int)pos.y, (int)pos.z % Chunk.width);
         Debug.Log($"chunkPos: {chunkPos}, voxelId {GetChunk(pos).GetBlock(chunkPos).Id}");
+        if(chunkPos.y == 0) return;
         chunk.EditVoxel(chunkPos, voxelTextureMap.Air.Id);
     }
 

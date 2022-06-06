@@ -14,12 +14,17 @@ public class PlayerController : MonoBehaviour
     public float jumpSpeed = 8.0f;
     public float gravity = 20.0f;
     public Camera playerCamera;
+    public GameObject breakSoundObj;
     public float lookSpeed = 2.0f;
     public float lookXLimit = 10.0f;
      // Pause UI
     public GameObject PauseWindow;
     private bool isPause;
     public Vector3 targetPosition;
+
+    float interval = 0, particleInterval = 0;
+    AudioSource audioSource;
+    ParticleSystem particleSystem;
 
     CharacterController characterController;
     Vector3 moveDirection = Vector3.zero;
@@ -36,6 +41,9 @@ public class PlayerController : MonoBehaviour
         Cursor.visible = false;
 
         isPause = false;
+        audioSource = breakSoundObj.GetComponent<AudioSource>();
+        particleSystem = breakSoundObj.GetComponent<ParticleSystem>();
+        
     }
 
     void Update()
@@ -46,27 +54,14 @@ public class PlayerController : MonoBehaviour
         float curSpeedX = canMove ? (isRunning ? runningSpeed : walkingSpeed) * Input.GetAxis("Vertical") : 0;
         float curSpeedY = canMove ? (isRunning ? runningSpeed : walkingSpeed) * Input.GetAxis("Horizontal") : 0;
         float movementDirectionY = moveDirection.y;
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        RaycastHit hit;
+
 
         moveDirection = (forward * curSpeedX) + (right * curSpeedY);
 
         if (Input.GetKeyDown(KeyCode.Escape)) PauseGame();
 
-        if(Input.GetMouseButton(1) && Physics.Raycast(ray, out hit, 5.0f))
-        {
-            // Debug.Log(world.VoxelInfo.Id);
-            world.terrain.CreateVoxel(hit.point, ray.direction, world.VoxelInfo.Id);
-        }
 
-        if (Input.GetMouseButton(0) && Physics.Raycast(ray, out hit, 5.0f))
-        {
-            // Debug.Log(hit.transform.name);
-            // Debug.Log(hit.point);
-            // Debug.Log(world.VoxelInfo.Id);
-            // Debug.Log(ray.direction);
-            world.terrain.RemoveVoxel(hit.point, ray.direction);
-        }
+        createAndDelete();
 
         if (Input.GetButton("Jump") && canMove && characterController.isGrounded)
         {
@@ -90,6 +85,47 @@ public class PlayerController : MonoBehaviour
             rotationX = Mathf.Clamp(rotationX, -90, 90);
             playerCamera.transform.localRotation = Quaternion.Euler(rotationX, 0, 0);
             transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * lookSpeed, 0);
+        }
+    }
+
+    void createAndDelete()
+    {
+        if(interval > 0)
+        {
+            interval -= Time.deltaTime;
+            return;
+        }
+        if(particleInterval > 0)
+        {
+            particleInterval -= Time.deltaTime;
+            particleSystem.Stop();
+        }
+
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        RaycastHit hit;
+        if(Input.GetMouseButton(1) && Physics.Raycast(ray, out hit, 5.0f))
+        {
+            // Debug.Log(world.VoxelInfo.Id);
+            world.terrain.CreateVoxel(hit.point, ray.direction, world.VoxelInfo.Id);
+            interval = 0.3f;
+            particleInterval = 1f;
+            audioSource.Play();
+            breakSoundObj.transform.position = hit.point + Vector3.up * .3f;
+            particleSystem.Play();
+        }
+
+        if (Input.GetMouseButton(0) && Physics.Raycast(ray, out hit, 5.0f))
+        {
+            // Debug.Log(hit.transform.name);
+            // Debug.Log(hit.point);
+            // Debug.Log(world.VoxelInfo.Id);
+            // Debug.Log(ray.direction);
+            world.terrain.RemoveVoxel(hit.point, ray.direction);
+            interval = 0.3f;
+            particleInterval = 1f;
+            audioSource.Play();
+            breakSoundObj.transform.position = hit.point + Vector3.up * .3f;
+            particleSystem.Play();
         }
     }
 
