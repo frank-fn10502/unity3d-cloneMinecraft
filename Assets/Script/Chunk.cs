@@ -66,9 +66,9 @@ public class Chunk
 
     public bool HasBlock(Vector3 pos)
     {
-        int x = Mathf.FloorToInt(pos.x);
-        int y = Mathf.FloorToInt(pos.y);
-        int z = Mathf.FloorToInt(pos.z);
+        int x = (int) pos.x;
+        int y = (int) pos.y;
+        int z = (int) pos.z;
 
         int blockId = -1;
         if (!this.ValidArea(x, y, z))
@@ -82,9 +82,9 @@ public class Chunk
 
     public VoxelInfo GetBlock(Vector3 pos)
     {
-        int x = Mathf.FloorToInt(pos.x);
-        int y = Mathf.FloorToInt(pos.y);
-        int z = Mathf.FloorToInt(pos.z);
+        int x = (int) pos.x;
+        int y = (int) pos.y;
+        int z = (int) pos.z;
 
         int blockId = -1;
         if (!this.ValidArea(x, y, z))
@@ -95,7 +95,8 @@ public class Chunk
          return voxelTextureMap.GetVoxelInfo(blockId);
     }
 
-    public void EditVoxel(Vector3 pos, byte id){
+    public void EditVoxel(Vector3 pos, byte id)
+    {
         int x = (int)pos.x;
         int y = (int)pos.y;
         int z = (int)pos.z;
@@ -103,7 +104,22 @@ public class Chunk
         this.map[x, y, z] = id;
 
         this.UpdateChunk();
+
         //TODO 需要同步確認周遭的 chunk 是否會因為這次的更動需要更新整個 chunk
+        this.UpdateNearChunk(x, y, z);
+    }
+
+    void UpdateNearChunk(int x, int y, int z)
+    {
+        var pos = new Vector3(x, y, z);
+        foreach (int face in Enum.GetValues(typeof(VoxelInfo.Face)))
+        {
+            var nearVoxelpos = pos + VoxelInfo.faceDirs[face];
+            if(!ValidArea(nearVoxelpos)){
+                var nearChunk = this.terrain.GetChunk(nearVoxelpos + this.Position);
+                nearChunk.UpdateChunk();
+            }
+        }
     }
 
     void PopulateChunk()
@@ -120,11 +136,15 @@ public class Chunk
         }
     }
 
-    public void UpdateChunk(){
+    public void UpdateChunk()
+    {
         this.vertexBase = 0;
+        this.vertices.Clear();
+        this.uvs.Clear();
+        this.triangles.Clear();
         for (int x = 0; x < Chunk.width; x++)
         {
-            for (int y = 0; y < height; y++)
+            for (int y = 0; y < height + airHeight; y++)
             {
                 for (int z = 0; z < Chunk.width; z++)
                 {
@@ -139,7 +159,10 @@ public class Chunk
     private void AddVoxelData(Vector3 pos)
     {
         int blockId = this.map[(int)pos.x, (int)pos.y, (int)pos.z];
+        if(blockId == voxelTextureMap.Air.Id) return;
+
         var voxelInfo = voxelTextureMap.GetVoxelInfo(blockId);
+
         foreach (int face in Enum.GetValues(typeof(VoxelInfo.Face)))
         {
             if (HasBlock(pos + VoxelInfo.faceDirs[face])) continue;
@@ -165,6 +188,11 @@ public class Chunk
 
         meshFilter.mesh = mesh;
         meshColider.sharedMesh = mesh;
+    }
+
+    bool ValidArea(Vector3 p)
+    {
+        return this.ValidArea((int)p.x, (int)p.y, (int)p.z);
     }
 
     bool ValidArea(int x, int y, int z)
