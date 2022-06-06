@@ -86,11 +86,37 @@ public class Terrain
     }
 
     public bool CheckForVoxel(Vector3 pos){
-        var cood = Convert2ChunkCoord(pos);
-        if(map[cood.x, cood.z] == null) return false;
+        if(!ValidArea(pos)) return false;
 
+        var cood = Convert2ChunkCoord(pos);
         var chunk = map[cood.x, cood.z];
-        return chunk.HasBlock(pos);
+
+        if(chunk == null) return false;
+        if(!chunk.IsActive) return false;
+
+        // return chunk.HasBlock(pos);
+        return true;
+    }
+
+    public void CreateVoxel(Vector3 pos, Vector3 dir, byte id){
+        pos -= dir * .5f;
+        if(!CheckForVoxel(pos)) return;
+        if(!voxelTextureMap.isValidId(id)) return;
+
+        var cood = Convert2ChunkCoord(pos);
+        var chunk = map[cood.x, cood.z];
+        
+        chunk.EditVoxel(pos, id);
+    }
+
+    public void RemoveVoxel(Vector3 pos, Vector3 dir){
+        pos += dir * .1f;
+        if(!CheckForVoxel(pos)) return;
+
+        var cood = Convert2ChunkCoord(pos);
+        var chunk = map[cood.x, cood.z];
+
+        chunk.EditVoxel(pos, voxelTextureMap.Air.Id);
     }
 
     public IEnumerator UpdateLoadChunk()
@@ -151,7 +177,6 @@ public class Terrain
 
         this.loadingChunks = newLoadingChunks;
     }
-    
 
     ChunkCoord Convert2ChunkCoord(Vector3 pos)
     {

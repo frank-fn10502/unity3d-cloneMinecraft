@@ -7,7 +7,7 @@ using UnityEngine;
 
 public class Chunk
 {
-    public static readonly byte width = 16, height = 16;
+    public static readonly byte width = 16, height = 16, airHeight = 64;
     private readonly Terrain terrain;
     private readonly ChunkCoord coord;
     
@@ -21,7 +21,7 @@ public class Chunk
     List<int> triangles = new List<int>();
     List<Vector2> uvs = new List<Vector2>();
 
-    byte[,,] map = new byte[width, height, width];
+    byte[,,] map = new byte[width, height + airHeight, width];
 
     public bool IsActive
     {
@@ -59,36 +59,9 @@ public class Chunk
             this.coord.z * Chunk.width
         );
 
-        this.populateChunk();
+        this.PopulateChunk();
 
-
-        this.vertexBase = 0;
-        for (int x = 0; x < Chunk.width; x++)
-        {
-            for (int y = 0; y < height; y++)
-            {
-                for (int z = 0; z < Chunk.width; z++)
-                {
-                    AddVoxelData(new Vector3(x, y, z));
-                }
-            }
-        }
-
-        CreateMesh();
-    }
-
-    void populateChunk()
-    {
-        for (int x = 0; x < Chunk.width; x++)
-        {
-            for (int y = 0; y < Chunk.height; y++)
-            {
-                for (int z = 0; z < Chunk.width; z++)
-                {
-                    this.map[x, y, z] = this.terrain.GetVoxelType(new Vector3(x, y, z) + this.Position);
-                }
-            }
-        }
+        this.UpdateChunk();
     }
 
     public bool HasBlock(Vector3 pos)
@@ -105,6 +78,62 @@ public class Chunk
 
 
         return voxelTextureMap.GetVoxelInfo(blockId).IsSolid;
+    }
+
+    public VoxelInfo GetBlock(Vector3 pos)
+    {
+        int x = Mathf.FloorToInt(pos.x);
+        int y = Mathf.FloorToInt(pos.y);
+        int z = Mathf.FloorToInt(pos.z);
+
+        int blockId = -1;
+        if (!this.ValidArea(x, y, z))
+            blockId = this.terrain.GetVoxelType(pos + this.Position);
+        else
+            blockId = this.map[x, y, z];
+
+         return voxelTextureMap.GetVoxelInfo(blockId);
+    }
+
+    public void EditVoxel(Vector3 pos, byte id){
+        int x = (int)pos.x;
+        int y = (int)pos.y;
+        int z = (int)pos.z;
+
+        this.map[x, y, z] = id;
+
+        this.UpdateChunk();
+        //TODO 需要同步確認周遭的 chunk 是否會因為這次的更動需要更新整個 chunk
+    }
+
+    void PopulateChunk()
+    {
+        for (int x = 0; x < Chunk.width; x++)
+        {
+            for (int y = 0; y < Chunk.height + Chunk.airHeight; y++)
+            {
+                for (int z = 0; z < Chunk.width; z++)
+                {
+                    this.map[x, y, z] = this.terrain.GetVoxelType(new Vector3(x, y, z) + this.Position);
+                }
+            }
+        }
+    }
+
+    public void UpdateChunk(){
+        this.vertexBase = 0;
+        for (int x = 0; x < Chunk.width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                for (int z = 0; z < Chunk.width; z++)
+                {
+                    this.AddVoxelData(new Vector3(x, y, z));
+                }
+            }
+        }
+
+        this.CreateMesh();
     }
 
     private void AddVoxelData(Vector3 pos)
@@ -141,7 +170,7 @@ public class Chunk
     bool ValidArea(int x, int y, int z)
     {
         if (x < 0 || y < 0 || z < 0) return false;
-        if (x >= width || y >= height || z >= width) return false;
+        if (x >= width || y >= height + airHeight || z >= width) return false;
 
         return true;
     }

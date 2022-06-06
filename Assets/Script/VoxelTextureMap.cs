@@ -63,6 +63,10 @@ public class VoxelTextureMap
         return voxelTextureMap;
     }
 
+    public bool isValidId(byte id){
+        return id >= voxelInfoList[0].Id || id <= voxelInfoList[voxelInfoList.Length - 1].Id;
+    }
+
     VoxelInfo createVoxelInfo(byte id, int front, int back, int left, int right, int top, int bottom, bool isSolid = true)
     {
         List<Vector2> front_uvs;
