@@ -53,14 +53,17 @@ public class PlayerController : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Escape)) PauseGame();
 
-        if (Input.GetMouseButton(0) && Physics.Raycast(ray, out hit))
+        if (Input.GetMouseButton(0) && Physics.Raycast(ray, out hit, 5.0f))
         {
-            if(hit.transform.gameObject==GameObject.FindGameObjectWithTag("Cube")){
-                targetPosition = hit.transform.position;
-                Debug.Log(targetPosition);
-                Debug.Log(hit.transform.name);
-                Debug.Log(world.VoxelInfo.Id);
-            }
+            Debug.Log(hit.transform.name);
+            Debug.Log(hit.point);
+            Debug.Log(world.VoxelInfo.Id);
+            // if(hit.transform.gameObject==GameObject.FindGameObjectWithTag("Cube")){
+            //     targetPosition = hit.transform.position;
+            //     Debug.Log(targetPosition);
+            //     Debug.Log(hit.transform.name);
+            //     Debug.Log(world.VoxelInfo.Id);
+            // }
         }
 
         if (Input.GetButton("Jump") && canMove && characterController.isGrounded)
