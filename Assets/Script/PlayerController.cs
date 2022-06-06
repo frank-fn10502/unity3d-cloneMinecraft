@@ -15,7 +15,7 @@ public class PlayerController : MonoBehaviour
     public float gravity = 20.0f;
     public Camera playerCamera;
     public float lookSpeed = 2.0f;
-    public float lookXLimit = 45.0f;
+    public float lookXLimit = 10.0f;
      // Pause UI
     public GameObject PauseWindow;
     private bool isPause;
@@ -53,18 +53,19 @@ public class PlayerController : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Escape)) PauseGame();
 
+        if(Input.GetMouseButton(1) && Physics.Raycast(ray, out hit, 5.0f))
+        {
+            // Debug.Log(world.VoxelInfo.Id);
+            world.terrain.CreateVoxel(hit.point, ray.direction, world.VoxelInfo.Id);
+        }
+
         if (Input.GetMouseButton(0) && Physics.Raycast(ray, out hit, 5.0f))
         {
-            Debug.Log(hit.transform.name);
-            Debug.Log(hit.point);
-            Debug.Log(world.VoxelInfo.Id);
-            Debug.Log(ray.direction);
-            // if(hit.transform.gameObject==GameObject.FindGameObjectWithTag("Cube")){
-            //     targetPosition = hit.transform.position;
-            //     Debug.Log(targetPosition);
-            //     Debug.Log(hit.transform.name);
-            //     Debug.Log(world.VoxelInfo.Id);
-            // }
+            // Debug.Log(hit.transform.name);
+            // Debug.Log(hit.point);
+            // Debug.Log(world.VoxelInfo.Id);
+            // Debug.Log(ray.direction);
+            world.terrain.RemoveVoxel(hit.point, ray.direction);
         }
 
         if (Input.GetButton("Jump") && canMove && characterController.isGrounded)
@@ -86,7 +87,7 @@ public class PlayerController : MonoBehaviour
         if (canMove)
         {
             rotationX += -Input.GetAxis("Mouse Y") * lookSpeed;
-            rotationX = Mathf.Clamp(rotationX, -lookXLimit, lookXLimit);
+            rotationX = Mathf.Clamp(rotationX, -90, 90);
             playerCamera.transform.localRotation = Quaternion.Euler(rotationX, 0, 0);
             transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * lookSpeed, 0);
         }

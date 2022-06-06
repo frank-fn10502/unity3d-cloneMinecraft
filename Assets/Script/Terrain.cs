@@ -86,7 +86,7 @@ public class Terrain
     }
 
     public bool CheckForVoxel(Vector3 pos){
-        if(!ValidArea(pos)) return false;
+        if(!ValidAreaWithAir(pos)) return false;
 
         var cood = Convert2ChunkCoord(pos);
         var chunk = map[cood.x, cood.z];
@@ -99,24 +99,30 @@ public class Terrain
     }
 
     public void CreateVoxel(Vector3 pos, Vector3 dir, byte id){
-        pos -= dir * .5f;
+        pos -= dir * .1f;
         if(!CheckForVoxel(pos)) return;
-        if(!voxelTextureMap.isValidId(id)) return;
+        if(!voxelTextureMap.IsValidId(id)) return;
+        var chunkPos = new Vector3((int)pos.x % Chunk.width , (int)pos.y, (int)pos.z % Chunk.width);
+        var playerChunkPos = new Vector3((int)player.position.x % Chunk.width , (int)player.position.y, (int)player.position.z % Chunk.width);
 
-        var cood = Convert2ChunkCoord(pos);
-        var chunk = map[cood.x, cood.z];
-        
-        chunk.EditVoxel(pos, id);
+        if(chunkPos.x == playerChunkPos.x && chunkPos.y == playerChunkPos.y && chunkPos.z == playerChunkPos.z)
+            return;
+
+        var chunk = GetChunk(pos);
+
+        Debug.Log($"chunkPos: {chunkPos}, voxelId {GetChunk(pos).GetBlock(chunkPos).Id}");
+        chunk.EditVoxel(chunkPos, id);
     }
 
     public void RemoveVoxel(Vector3 pos, Vector3 dir){
         pos += dir * .1f;
         if(!CheckForVoxel(pos)) return;
 
-        var cood = Convert2ChunkCoord(pos);
-        var chunk = map[cood.x, cood.z];
+        var chunk = GetChunk(pos);
 
-        chunk.EditVoxel(pos, voxelTextureMap.Air.Id);
+        var chunkPos = new Vector3((int)pos.x % Chunk.width , (int)pos.y, (int)pos.z % Chunk.width);
+        Debug.Log($"chunkPos: {chunkPos}, voxelId {GetChunk(pos).GetBlock(chunkPos).Id}");
+        chunk.EditVoxel(chunkPos, voxelTextureMap.Air.Id);
     }
 
     public IEnumerator UpdateLoadChunk()
@@ -180,19 +186,40 @@ public class Terrain
 
     ChunkCoord Convert2ChunkCoord(Vector3 pos)
     {
-        int x = (int)pos.x / Chunk.width;
-        int z = (int)pos.z / Chunk.width;
+        int x = (int)(pos.x / Chunk.width);
+        int z = (int)(pos.z / Chunk.width);
 
         return new ChunkCoord(x, z);
     }
 
+    public Chunk GetChunk(Vector3 pos)
+    {
+        if(pos.y < 0) return null;
+        var cood = Convert2ChunkCoord(pos);
+
+        if(cood.x >= worldSize || cood.z >= worldSize || cood.x < 0 || cood.z < 0) 
+           return null;
+
+        return map[cood.x, cood.z];
+    }
+
     public byte GetVoxelType(Vector3 pos)
     {
-        if (!this.ValidArea(pos)) return voxelTextureMap.Air.Id;
-        if (pos.y == 0) return voxelTextureMap.BedRock.Id;
-        if (pos.y == Chunk.height - 1) return voxelTextureMap.Grass.Id;
+        var chunk = this.GetChunk(pos);
+        if(chunk != null)
+        {
+            var chunkPos = new Vector3((int)(pos.x % Chunk.width), (int)pos.y, (int)(pos.z % Chunk.width));
+            // Debug.Log($"chunkPos: {chunkPos}");
+            return chunk.GetBlock(chunkPos).Id;
+        }
+        else
+        {
+            if (!this.ValidArea(pos)) return voxelTextureMap.Air.Id;
+            if (pos.y == 0) return voxelTextureMap.BedRock.Id;
+            if (pos.y == Chunk.height - 1) return voxelTextureMap.Grass.Id;
 
-        return voxelTextureMap.Stone.Id;
+            return voxelTextureMap.Stone.Id;
+        }
     }
 
     bool ValidArea(Vector3 pos)
@@ -200,6 +227,12 @@ public class Terrain
         return pos.x >= 0 && pos.x < Chunk.width * Terrain.worldSize &&
                pos.z >= 0 && pos.z < Chunk.width * Terrain.worldSize &&
                pos.y >= 0 && pos.y < Chunk.height;
+    }
+    bool ValidAreaWithAir(Vector3 pos)
+    {
+        return pos.x >= 0 && pos.x < Chunk.width * Terrain.worldSize &&
+               pos.z >= 0 && pos.z < Chunk.width * Terrain.worldSize &&
+               pos.y >= 0 && pos.y < Chunk.height + Chunk.airHeight;
 
     }
 }
