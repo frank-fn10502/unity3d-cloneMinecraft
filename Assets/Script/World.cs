@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class World : MonoBehaviour
 {
     //TODO 應該要用 Find 的方法...
     public Transform player;
     Terrain terrain;
+    public BlockType[] blocktypes;
 
     private void Awake()
     {
@@ -16,11 +18,19 @@ public class World : MonoBehaviour
     }
     private void Start()
     {
-        this.player.position = this.terrain.MidPosition;
-
+        Vector3 temp = new Vector3(0,50,0);
+        this.player.position = this.terrain.MidPosition + temp;
         StartCoroutine(this.terrain.UpdateLoadChunk());
     }
     private void Update()
     {
+    }
+
+    [System.Serializable]
+    public class BlockType
+    {
+        public string blockName;
+        public bool isSolid;
+        public Sprite icon;
     }
 }
