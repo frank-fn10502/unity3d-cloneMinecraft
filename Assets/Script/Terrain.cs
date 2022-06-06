@@ -110,7 +110,7 @@ public class Terrain
     }
 
     public void RemoveVoxel(Vector3 pos, Vector3 dir){
-        pos -= dir * .5f;
+        pos += dir * .1f;
         if(!CheckForVoxel(pos)) return;
 
         var cood = Convert2ChunkCoord(pos);
